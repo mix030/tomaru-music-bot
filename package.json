@@ -1,5 +1,5 @@
 {
-  "name": "discord-music-bot",
+  "name": "tomaru-music-bot",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
@@ -14,6 +14,7 @@
     "play-dl": "^1.9.6",
     "ffmpeg-static": "^5.1.0",
     "libsodium-wrappers": "^0.7.11",
-    "opusscript": "^0.0.8"
+    "opusscript": "^0.0.8",
+    "http": "0.0.1-security"
   }
 }
