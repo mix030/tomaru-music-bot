@@ -28,8 +28,8 @@ client.once("ready", async (c) => {
         console.log("✅ YoutubeiExtractor โหลดสำเร็จ");
 
         await player.extractors.register(SpotifyExtractor, {
-            clientId: process.env.SPOTIFY_CLIENT_ID,
-            clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+            clientId: "a997795db3d04507a610a7bf84e648b4",
+            clientSecret: "5cf8600dfcea4e32bede13a1410c4b42",
         });
         console.log("✅ SpotifyExtractor โหลดสำเร็จ");
 
