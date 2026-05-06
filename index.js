@@ -111,12 +111,12 @@ client.on("interactionCreate", async (interaction) => {
 client.once("clientReady", async (c) => {
     console.log(`${c.user.tag} ออนไลน์บน Render แล้ว!`);
     
-    // โหลด Extractors ให้ครบ (บรรทัดสำคัญที่หายไป)
+    // เปลี่ยนจาก loadMulti(DefaultExtractors) เป็น register
     try {
-        await player.extractors.loadMulti(DefaultExtractors);
-        console.log("✅ Extractors loaded successfully!");
+        await player.extractors.register(DefaultExtractors);
+        console.log("✅ Extractors registered successfully!");
     } catch (e) {
-        console.log("❌ Extractors load failed:", e.message);
+        console.log("❌ Extractors registration failed:", e.message);
     }
 
     await client.application.commands.set([
