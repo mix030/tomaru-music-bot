@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { Player } from "discord-player";
-import { DefaultExtractors } from "@discord-player/extractor"; // ใช้แบบนี้บรรทัดเดียวพอครับ
-import playdl from "play-dl";
+import pkgExtractor from '@discord-player/extractor';
+const { DefaultExtractors } = pkgExtractor;
 import ffmpeg from "ffmpeg-static";
 import http from "http";
 // ตั้งค่า FFmpeg
