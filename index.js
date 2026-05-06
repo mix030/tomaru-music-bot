@@ -1,6 +1,6 @@
 import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { Player } from "discord-player";
-import pkg from '@discord-player/extractor';
+import { DefaultExtractors } from "@discord-player/extractor";
 const { DefaultExtractors } = pkg;
 import playdl from "play-dl";
 import ffmpeg from "ffmpeg-static";
@@ -111,12 +111,12 @@ client.on("interactionCreate", async (interaction) => {
 client.once("clientReady", async (c) => {
     console.log(`${c.user.tag} ออนไลน์บน Render แล้ว!`);
     
-    // เปลี่ยนจาก loadMulti(DefaultExtractors) เป็น register
+    // ใช้คำสั่งนี้แทน register หรือ loadMulti แบบเดิม
     try {
-        await player.extractors.register(DefaultExtractors);
-        console.log("✅ Extractors registered successfully!");
+        await player.extractors.loadMulti(DefaultExtractors);
+        console.log("✅ Extractors loaded successfully!");
     } catch (e) {
-        console.log("❌ Extractors registration failed:", e.message);
+        console.log("❌ Load Error:", e.message);
     }
 
     await client.application.commands.set([
