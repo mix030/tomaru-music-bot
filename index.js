@@ -64,12 +64,16 @@ client.on("interactionCreate", async (interaction) => {
                     selfDeaf: true,
                     leaveOnEmpty: true,
                     bufferingTimeout: 15000,
-                    onBeforeCreateStream: async (t) => {
+                    onBeforeCreateStream: async (track) => {
                         try {
-                            const res = await playdl.search(t.title, { source: { soundcloud: "tracks" }, limit: 1 });
-                            const stream = await playdl.stream(res[0]?.url || t.url, { discordPlayerCompatibility: true });
+                            // พยายามหาจาก YouTube ก่อน ถ้าไม่ได้ค่อยไป SoundCloud
+                            const result = await playdl.search(track.title, { limit: 1 });
+                            const stream = await playdl.stream(result[0].url, { discordPlayerCompatibility: true });
                             return stream.stream;
-                        } catch (err) { return null; }
+                        } catch (err) {
+                            console.log("Stream Error:", err.message);
+                            return null;
+                        }
                     }
                 }
             });
