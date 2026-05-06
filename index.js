@@ -25,7 +25,7 @@ const player = new Player(client, {
     }
 });
 
-// --- ระบบกันบอทหลับสำหรับ Render (Web Service) ---
+// --- ระบบกันบอทหลับสำหรับ Render ---
 http.createServer((req, res) => {
     res.write("Bot is running!");
     res.end();
@@ -36,14 +36,13 @@ client.once("clientReady", async (c) => {
     console.log(`✅ ${c.user.tag} ออนไลน์บน Render แล้ว!`);
     
     try {
-        // ใช้ register สำหรับเวอร์ชัน 6.x เพื่อโหลดตัวดึงเพลง
-        await player.extractors.register(DefaultExtractors);
-        console.log("🎵 ระบบค้นหาเพลง (Extractors) พร้อมใช้งาน!");
+        // ใช้ loadDefault() แทนเพื่อเลี่ยงปัญหาชื่อตัวแปร undefined
+        await player.extractors.loadDefault();
+        console.log("🎵 ระบบค้นหาเพลง (Extractors) พร้อมใช้งานแล้ว!");
     } catch (e) {
         console.log("❌ ระบบดึงเพลงมีปัญหา:", e.message);
     }
 
-    // ลงทะเบียนคำสั่ง Slash Commands
     await client.application.commands.set([
         { 
             name: "play", 
@@ -84,7 +83,6 @@ client.on("interactionCreate", async (interaction) => {
                     selfDeaf: true,
                     leaveOnEmpty: true,
                     onBeforeCreateStream: async (track) => {
-                        // ดึง Stream ผ่าน play-dl เพื่อเลี่ยงปัญหา YouTube บล็อก
                         const stream = await playdl.stream(track.url, { discordPlayerCompatibility: true });
                         return stream.stream;
                     }
@@ -102,7 +100,7 @@ client.on("interactionCreate", async (interaction) => {
 
         } catch (e) {
             console.error(e);
-            await interaction.editReply("❌ เกิดข้อผิดพลาดในการเล่นเพลงครับ (อาจเป็นที่ YouTube บล็อก IP)");
+            await interaction.editReply("❌ เกิดข้อผิดพลาดในการเล่นเพลงครับ");
         }
     }
 
@@ -121,7 +119,6 @@ client.on("interactionCreate", async (interaction) => {
     }
 });
 
-// ดักจับ Error ไม่ให้บอทดับ
 process.on("unhandledRejection", (reason) => console.log("[Error]:", reason));
 
 client.login(process.env.TOKEN);
