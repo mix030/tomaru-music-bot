@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { Player } from "discord-player";
-import { DefaultExtractors } from "@discord-player/extractor";
+import pkg from '@discord-player/extractor';
+const { DefaultExtractors } = pkg;
 import playdl from "play-dl";
 import ffmpeg from "ffmpeg-static";
 import http from "http"; // เพิ่มเข้ามาเพื่อหลอก Render ไม่ให้บอทหลับ
