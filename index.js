@@ -6,7 +6,6 @@ import playdl from "play-dl";
 import ffmpeg from "ffmpeg-static";
 import http from "http";
 
-// --- ตั้งค่าพื้นฐาน ---
 process.env.FFMPEG_PATH = ffmpeg;
 
 const client = new Client({
@@ -18,66 +17,47 @@ const client = new Client({
     ]
 });
 
-const player = new Player(client, {
-    ytdlOptions: { 
-        quality: 'highestaudio', 
-        highWaterMark: 1 << 25 
-    }
-});
+const player = new Player(client);
 
-// --- ระบบกันบอทหลับ (Web Server) ---
+// ระบบ Web Server สำหรับ Render
 http.createServer((req, res) => {
-    res.write("Bot is running!");
+    res.write("Bot is online!");
     res.end();
 }).listen(process.env.PORT || 3000);
 
-// --- เมื่อบอทออนไลน์ ---
 client.once("clientReady", async (c) => {
-    console.log(`✅ ${c.user.tag} ออนไลน์บน Render แล้ว!`);
+    console.log(`✅ ${c.user.tag} ออนไลน์แล้ว!`);
     
     try {
-        await player.extractors.register(DefaultExtractors);
-        console.log("🎵 ระบบค้นหาเพลง (Extractors) พร้อมใช้งานแล้ว!");
+        // โหลดระบบดึงเพลง
+        await player.extractors.loadMulti(DefaultExtractors);
+        console.log("🎵 ระบบเพลงพร้อมใช้งาน!");
     } catch (e) {
-        console.log("❌ ระบบดึงเพลงมีปัญหา:", e.message);
+        console.log("❌ ระบบเพลง Error:", e.message);
     }
 
-    // ลงทะเบียน Slash Commands ทั้งหมด
+    // ลงทะเบียนคำสั่ง
     await client.application.commands.set([
-        { 
-            name: "play", 
-            description: "เล่นเพลงจากชื่อหรือลิงก์", 
-            options: [{ name: "query", description: "ชื่อเพลงหรือลิงก์", type: 3, required: true }] 
-        },
-        { name: "skip", description: "ข้ามเพลงปัจจุบัน" },
+        { name: "play", description: "เล่นเพลง", options: [{ name: "query", description: "ชื่อเพลง", type: 3, required: true }] },
+        { name: "skip", description: "ข้ามเพลง" },
         { name: "pause", description: "พักเพลง" },
         { name: "resume", description: "เล่นเพลงต่อ" },
-        { name: "stop", description: "หยุดเล่นและออกจากห้อง" }
+        { name: "stop", description: "หยุดและออกจากห้อง" }
     ]);
 });
 
-// --- ระบบคำสั่งและการเล่นเพลง ---
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
-
     const { commandName, options, guild, member } = interaction;
+    const queue = player.nodes.get(guild.id);
 
     if (commandName === "play") {
         await interaction.deferReply();
-        const query = options.getString("query");
-
-        if (!member.voice.channel) {
-            return interaction.editReply("❌ คุณต้องเข้าห้องเสียงก่อนครับ!");
-        }
+        if (!member.voice.channel) return interaction.editReply("❌ เข้าห้องเสียงก่อนครับ");
 
         try {
-            const result = await player.search(query, { requestedBy: interaction.user });
-
-            if (!result || !result.tracks.length) {
-                return interaction.editReply("❌ หาเพลงไม่เจอครับ ลองเปลี่ยนชื่อเพลงดูนะ");
-            }
-
-            const { track } = await player.play(member.voice.channel, result, {
+            const query = options.getString("query");
+            const { track } = await player.play(member.voice.channel, query, {
                 nodeOptions: {
                     metadata: interaction.channel,
                     selfDeaf: true,
@@ -88,49 +68,36 @@ client.on("interactionCreate", async (interaction) => {
                     }
                 }
             });
-
-            const embed = new EmbedBuilder()
-                .setTitle("🎶 เริ่มเล่นเพลง")
-                .setDescription(`**[${track.title}](${track.url})**`)
-                .setThumbnail(track.thumbnail)
-                .setColor("#00ff00")
-                .setFooter({ text: `ขอโดย: ${interaction.user.username}` });
-
-            await interaction.editReply({ embeds: [embed] });
-
+            await interaction.editReply(`🎶 เริ่มเล่น: **${track.title}**`);
         } catch (e) {
-            console.error(e);
-            await interaction.editReply("❌ เกิดข้อผิดพลาด (อาจเป็นที่ YouTube บล็อก IP ของ Render)");
+            console.log(e);
+            await interaction.editReply("❌ เล่นไม่ได้ครับ (อาจติดลิขสิทธิ์หรือ IP บล็อก)");
         }
     }
 
-    // --- ควบคุมคิวเพลง ---
-    const queue = player.nodes.get(guild.id);
-
-    if (commandName === "skip") {
-        if (!queue || !queue.isPlaying()) return interaction.reply("❌ ไม่มีเพลงที่เล่นอยู่ครับ");
-        queue.node.skip();
-        interaction.reply("⏭️ ข้ามเพลงให้แล้วครับ!");
-    }
-
     if (commandName === "pause") {
-        if (!queue || !queue.isPlaying()) return interaction.reply("❌ ไม่มีเพลงเล่นอยู่ครับ");
+        if (!queue || !queue.isPlaying()) return interaction.reply("❌ ไม่มีเพลงเล่นอยู่");
         queue.node.setPaused(true);
-        interaction.reply("⏸️ พักเพลงให้แล้วครับ!");
+        interaction.reply("⏸️ พักเพลงแล้ว");
     }
 
     if (commandName === "resume") {
-        if (!queue) return interaction.reply("❌ ไม่มีคิวเพลงครับ");
+        if (!queue) return interaction.reply("❌ ไม่มีคิวเพลง");
         queue.node.setPaused(false);
-        interaction.reply("▶️ เล่นเพลงต่อแล้วครับ!");
+        interaction.reply("▶️ เล่นต่อแล้ว");
+    }
+
+    if (commandName === "skip") {
+        if (!queue || !queue.isPlaying()) return interaction.reply("❌ ไม่มีเพลง");
+        queue.node.skip();
+        interaction.reply("⏭️ ข้ามเพลงแล้ว");
     }
 
     if (commandName === "stop") {
-        if (!queue) return interaction.reply("❌ บอทไม่ได้ทำงานอยู่ครับ");
+        if (!queue) return interaction.reply("❌ บอทไม่ได้ทำงาน");
         queue.delete();
-        interaction.reply("🛑 หยุดเล่นและออกจากห้องแล้วครับ!");
+        interaction.reply("🛑 หยุดและออกจากห้องแล้ว");
     }
 });
 
-process.on("unhandledRejection", (reason) => console.log("[Error]:", reason));
 client.login(process.env.TOKEN);
