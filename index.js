@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { Player } from "discord-player";
-import { DefaultExtractors } from "@discord-player/extractor";
+import pkg from '@discord-player/extractor'; // นำเข้าแบบ Default ตามที่ Log แนะนำ
+const { DefaultExtractors } = pkg;
 import playdl from "play-dl";
 import ffmpeg from "ffmpeg-static";
 import http from "http";
@@ -35,14 +36,13 @@ client.once("ready", async (c) => {
     console.log(`✅ ${c.user.tag} ออนไลน์บน Render แล้ว!`);
     
     try {
-        // ใช้คำสั่งนี้เพื่อโหลดระบบดึงเพลงให้สมบูรณ์
-        await player.extractors.loadMulti(DefaultExtractors);
+        // ใช้คำสั่ง register สำหรับเวอร์ชันใหม่
+        await player.extractors.register(DefaultExtractors);
         console.log("🎵 ระบบค้นหาเพลง (Extractors) พร้อมใช้งาน!");
     } catch (e) {
         console.log("❌ ระบบดึงเพลงมีปัญหา:", e.message);
     }
 
-    // ลงทะเบียนคำสั่ง Slash Commands
     await client.application.commands.set([
         { 
             name: "play", 
@@ -82,7 +82,6 @@ client.on("interactionCreate", async (interaction) => {
                     metadata: interaction.channel,
                     selfDeaf: true,
                     leaveOnEmpty: true,
-                    // ตั้งค่าดึงเสียงผ่าน play-dl เพื่อความเสถียร
                     onBeforeCreateStream: async (track) => {
                         const stream = await playdl.stream(track.url, { discordPlayerCompatibility: true });
                         return stream.stream;
@@ -120,7 +119,6 @@ client.on("interactionCreate", async (interaction) => {
     }
 });
 
-// ป้องกันบอทค้างเวลาเกิด Error เล็กน้อย
 process.on("unhandledRejection", (reason) => console.log("[Error]:", reason));
 
 client.login(process.env.TOKEN);
