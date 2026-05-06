@@ -110,7 +110,7 @@ client.once("clientReady", async (c) => {
     console.log(`${c.user.tag} ออนไลน์บน Render แล้ว!`);
     
     try {
-        // ใช้คำสั่งมาตรฐานของเวอร์ชัน 6.x
+        // ใช้ชื่อตัวแปรที่เราสร้างไว้ด้านบน
         await player.extractors.loadMulti(DefaultExtractors);
         console.log("✅ Extractors loaded successfully!");
     } catch (e) {
