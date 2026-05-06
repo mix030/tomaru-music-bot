@@ -110,11 +110,11 @@ client.once("clientReady", async (c) => {
     console.log(`${c.user.tag} ออนไลน์บน Render แล้ว!`);
     
     try {
-        // ใช้ชื่อตัวแปรที่เราสร้างไว้ด้านบน
-        await player.extractors.loadMulti(DefaultExtractors);
-        console.log("✅ Extractors loaded successfully!");
+        // เปลี่ยนจาก loadMulti เป็น register
+        await player.extractors.register(DefaultExtractors);
+        console.log("✅ Extractors registered successfully!");
     } catch (e) {
-        console.log("❌ Load Error:", e.message);
+        console.log("❌ Registration Error:", e.message);
     }
 
     await client.application.commands.set([
