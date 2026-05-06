@@ -20,11 +20,18 @@ http.createServer((req, res) => {
     res.end("Bot is online!");
 }).listen(process.env.PORT || 3000);
 
-client.once("ready", async (c) => {
+// แก้จาก "ready" เป็น "clientReady" ตาม discord-player v6
+client.once("clientReady", async (c) => {
     console.log(`✅ ${c.user.tag} ออนไลน์แล้ว!`);
 
     try {
-        await player.extractors.register(YoutubeiExtractor, {});
+        // YoutubeiExtractor — ใส่ options เพิ่มเพื่อแก้ signature decipher error
+        await player.extractors.register(YoutubeiExtractor, {
+            authentication: undefined,
+            streamOptions: {
+                useClient: "WEB_EMBEDDED",
+            },
+        });
         console.log("✅ YoutubeiExtractor โหลดสำเร็จ");
 
         await player.extractors.register(SpotifyExtractor, {
