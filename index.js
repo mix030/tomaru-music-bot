@@ -1,6 +1,6 @@
-import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { Client, GatewayIntentBits, EmbedBuilder } from "discord.js";
 import { Player } from "discord-player";
-import pkg from '@discord-player/extractor'; // นำเข้าแบบ Default ตามที่ Log แนะนำ
+import pkg from '@discord-player/extractor';
 const { DefaultExtractors } = pkg;
 import playdl from "play-dl";
 import ffmpeg from "ffmpeg-static";
@@ -25,24 +25,25 @@ const player = new Player(client, {
     }
 });
 
-// --- ระบบกันบอทหลับสำหรับ Render ---
+// --- ระบบกันบอทหลับสำหรับ Render (Web Service) ---
 http.createServer((req, res) => {
     res.write("Bot is running!");
     res.end();
 }).listen(process.env.PORT || 3000);
 
 // --- เมื่อบอทพร้อมทำงาน ---
-client.once("ready", async (c) => {
+client.once("clientReady", async (c) => {
     console.log(`✅ ${c.user.tag} ออนไลน์บน Render แล้ว!`);
     
     try {
-        // ใช้คำสั่ง register สำหรับเวอร์ชันใหม่
+        // ใช้ register สำหรับเวอร์ชัน 6.x เพื่อโหลดตัวดึงเพลง
         await player.extractors.register(DefaultExtractors);
         console.log("🎵 ระบบค้นหาเพลง (Extractors) พร้อมใช้งาน!");
     } catch (e) {
         console.log("❌ ระบบดึงเพลงมีปัญหา:", e.message);
     }
 
+    // ลงทะเบียนคำสั่ง Slash Commands
     await client.application.commands.set([
         { 
             name: "play", 
@@ -83,6 +84,7 @@ client.on("interactionCreate", async (interaction) => {
                     selfDeaf: true,
                     leaveOnEmpty: true,
                     onBeforeCreateStream: async (track) => {
+                        // ดึง Stream ผ่าน play-dl เพื่อเลี่ยงปัญหา YouTube บล็อก
                         const stream = await playdl.stream(track.url, { discordPlayerCompatibility: true });
                         return stream.stream;
                     }
@@ -99,8 +101,8 @@ client.on("interactionCreate", async (interaction) => {
             await interaction.editReply({ embeds: [embed] });
 
         } catch (e) {
-            console.log(e);
-            await interaction.editReply("❌ เกิดข้อผิดพลาดในการเล่นเพลงครับ");
+            console.error(e);
+            await interaction.editReply("❌ เกิดข้อผิดพลาดในการเล่นเพลงครับ (อาจเป็นที่ YouTube บล็อก IP)");
         }
     }
 
@@ -119,6 +121,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 });
 
+// ดักจับ Error ไม่ให้บอทดับ
 process.on("unhandledRejection", (reason) => console.log("[Error]:", reason));
 
 client.login(process.env.TOKEN);
