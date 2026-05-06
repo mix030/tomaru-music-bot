@@ -1,11 +1,9 @@
 import { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { Player } from "discord-player";
-import { DefaultExtractors } from "@discord-player/extractor";
-const { DefaultExtractors } = pkg;
+import { DefaultExtractors } from "@discord-player/extractor"; // ใช้แบบนี้บรรทัดเดียวพอครับ
 import playdl from "play-dl";
 import ffmpeg from "ffmpeg-static";
-import http from "http"; // เพิ่มเข้ามาเพื่อหลอก Render ไม่ให้บอทหลับ
-
+import http from "http";
 // ตั้งค่า FFmpeg
 process.env.FFMPEG_PATH = ffmpeg;
 
@@ -111,8 +109,8 @@ client.on("interactionCreate", async (interaction) => {
 client.once("clientReady", async (c) => {
     console.log(`${c.user.tag} ออนไลน์บน Render แล้ว!`);
     
-    // ใช้คำสั่งนี้แทน register หรือ loadMulti แบบเดิม
     try {
+        // ใช้คำสั่งมาตรฐานของเวอร์ชัน 6.x
         await player.extractors.loadMulti(DefaultExtractors);
         console.log("✅ Extractors loaded successfully!");
     } catch (e) {
