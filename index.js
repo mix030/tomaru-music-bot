@@ -110,7 +110,15 @@ client.on("interactionCreate", async (interaction) => {
 
 client.once("clientReady", async (c) => {
     console.log(`${c.user.tag} ออนไลน์บน Render แล้ว!`);
-    await player.extractors.loadMulti(DefaultExtractors);
+    
+    // โหลด Extractors ให้ครบ (บรรทัดสำคัญที่หายไป)
+    try {
+        await player.extractors.loadMulti(DefaultExtractors);
+        console.log("✅ Extractors loaded successfully!");
+    } catch (e) {
+        console.log("❌ Extractors load failed:", e.message);
+    }
+
     await client.application.commands.set([
         { name: "play", description: "เล่นเพลง", options: [{ name: "url", description: "ชื่อเพลง/ลิงก์", type: 3, required: true }] },
         { name: "skip", description: "ข้ามเพลง" },
